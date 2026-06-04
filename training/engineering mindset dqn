@@ -1,0 +1,51 @@
+
+https://github.com/johnnycode8/dqn_pytorch
+
+Look at the files! 🎯
+
+See these 3 files?
+- `dqn.py` — the brain (neural network)
+- `experience_replay.py` — the memory (replay buffer)
+- `agent.py` — the agent
+
+**Exactly the same 3 parts we built!** 😄
+
+This person solved the same problem — DQN in PyTorch. We found their structure, understood the pattern, and customized it for Indian trading markets.
+
+That's the engineering mindset:
+1. 🔍 Search for existing solutions
+2. 👀 Understand the structure
+3. ✂️ Take what you need
+4. 🛠️ Customize for your problem
+
+---
+
+Now click on `experience_replay.py` — I want you to see how similar it is to our ReplayBuffer! 😄
+
+
+----------------------------------
+
+See that?! 🎯
+
+Their code:
+- `deque` ✅
+- `append` ✅
+- `sample` ✅
+- `__len__` ✅
+
+Our code has the exact same structure! We just renamed `append` to `push` and added our 5 diary items (state, action, reward, next_state, done).
+
+**Same skeleton, customized for our problem.** 😄
+
+---
+
+Now you've seen with your own eyes that:
+- Our Gym environment → came from OpenAI Gym docs skeleton
+- Our ReplayBuffer → same pattern as this GitHub repo
+- Our DQN brain → same pattern as PyTorch official docs
+
+**Nobody writes this from scratch. Engineers find, understand, customize.** 🔥
+
+---
+
+Now go back to Colab and paste the Step 3 code. You're not copying blindly anymore — you know exactly where each part came from and why! 😄
