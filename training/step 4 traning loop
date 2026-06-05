@@ -1,0 +1,102 @@
+Okay! Story first as always 😄
+
+---
+
+**What is the Training Loop?**
+
+Remember our cricket analogy 🏏
+
+- 1 episode = 1 full match (748 days)
+- We play 100 matches total
+
+**Each match goes like this:**
+
+1. Reset the game — agent starts fresh with ₹1,00,000
+2. Agent looks at today's prices (state)
+3. Agent picks an action — Buy, Sell or Hold
+4. Game responds — portfolio goes up or down (reward)
+5. Agent writes this in diary (store experience)
+6. Agent studies 32 random diary entries (train step)
+7. Move to next day and repeat until 748 days done
+8. Match over! Record total reward for this episode
+9. Start next match
+
+---
+
+**After 100 matches:**
+- Early matches = agent plays randomly, loses money 📉
+- Middle matches = agent starts learning patterns 📊
+- Late matches = agent makes smarter decisions 📈
+
+---
+
+**What we save:**
+- Reward per episode → to plot the learning curve
+- That's it for Step 4!
+
+---------------------------------------------------------------------------------------------
+
+Yes! 100% correct! 🎯
+
+```
+Episode 1 = 748 days (steps 1-9)
+Episode 2 = 748 days (steps 1-9 again)
+Episode 3 = 748 days (steps 1-9 again)
+...
+Episode 100 = 748 days (steps 1-9 again)
+```
+
+Total steps = 100 × 748 = **74,800 individual trading decisions!**
+
+And every single time the agent makes a decision, writes in diary, learns from diary. By episode 100 it has seen the same 748 days 100 times but each time with a smarter brain! 😄
+
+Ready for the code now? 🔥
+
+---------------------------------------------------------------
+
+Almost! But not exactly 74,800 in the diary. 😄
+
+---
+
+The diary has a **maximum capacity of 10,000** remember?
+
+```python
+class ReplayBuffer:
+    def __init__(self, capacity=10000):
+```
+
+So:
+- Agent makes 74,800 decisions total ✅
+- Writes all of them in diary ✅
+- But diary only keeps the **latest 10,000** ✅
+- Oldest entries get deleted automatically when full
+
+---
+
+**Simple analogy:**
+
+Diary has only 10,000 pages 📔
+
+After page 10,000 is full — when agent writes page 10,001, the oldest page 1 gets torn out automatically.
+
+So the diary always has the **most recent 10,000 experiences** — not all 74,800.
+
+---
+
+This is actually intentional — old early experiences where agent was playing randomly are less useful than recent experiences where agent is smarter. 😄
+
+Ready for the code now? 🔥
+
+---------------------------------------------------------------
+
+Before you run — what this does in simple terms:
+
+Outer loop = 100 matches
+Inner loop = 748 days per match
+Every day: agent decides → game responds → agent writes diary → agent studies diary
+Every 10 episodes: update target network
+After all 100 episodes: plot the learning curve
+
+---
+
+Ready for the code? 🔥
