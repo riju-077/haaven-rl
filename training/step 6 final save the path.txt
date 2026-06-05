@@ -1,0 +1,103 @@
+Great questions! Let me explain simply. 😄
+
+---
+
+**Why do we need the JSON?**
+
+Remember the end user experience? When someone visits the HavenRL website and clicks "Run Backtest" — the FastAPI backend needs to serve them data to display on the dashboard.
+
+The JSON is basically a **ready made data package** for the frontend. Instead of running the agent every time a user visits, we just load the pre-saved results and serve them instantly! 😄
+
+---
+
+**What's inside the JSON — simple story:**
+
+📊 **reward_history**
+The agent's score card during training.
+200 numbers — one per episode.
+Example: `[0.91, 0.43, 0.23...]`
+Used to plot the **"how did the agent learn?"** chart on dashboard.
+
+---
+
+💰 **portfolio_history**
+The portfolio value every single day during the 2023-2024 test period.
+479 numbers — one per trading day.
+Example: `[100000, 100012, 99980...]`
+Used to plot the **"portfolio growth chart"** on dashboard.
+
+---
+
+📋 **trade_actions**
+Every single decision the agent made during testing.
+479 entries — one per trading day.
+Example:
+```
+Jan 3 2023 → HOLD → ₹1,00,000
+Jan 4 2023 → BUY  → ₹99,800
+Jan 5 2023 → HOLD → ₹1,00,200
+```
+Used to show the **trade log table** on dashboard.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Great question! Let me draw the full picture first! 😄
+
+---
+
+**Data flow diagram:**
+
+```
+USER CLICKS "Run Backtest"
+         ↓
+    FRONTEND (HTML)
+    sends request
+         ↓
+    FASTAPI BACKEND
+    opens results.json
+         ↓
+    sends data back
+         ↓
+    FRONTEND displays
+    📈 Portfolio chart
+    📋 Trade log
+    💰 Final return
+```
+
+That's it! Simple pipeline. 😄
+
+---
+
+**What's inside results.json:**
+
+```json
+{
+  "reward_history": [0.91, 0.43, 0.23, ...],
+  "portfolio_history": [100000, 99800, 100200, ...],
+  "trade_actions": [
+    {"date": "2023-01-03", "action": "HOLD", "portfolio_value": 100000},
+    {"date": "2023-01-04", "action": "BUY",  "portfolio_value": 99800},
+    ...
+  ]
+}
+```
+
+JSON is just a neat box of all results. FastAPI opens the box, frontend displays it. 😄
+
+---
+
+**Your question about 2023-2025 or 2024-2025:**
+
+This is the honest answer — if you want different date ranges, you need to **retrain or re-backtest** with new dates and save a new results.json.
+
+The current results.json is FIXED to 2023-2024 because that's what we backtested.
+
+For Version 2 — user picks date range → FastAPI runs backtest live → returns fresh results. But that's more complex! 😄
+
+---
+
+Ready to download the files? 🔥
+
+Think of JSON as the **full match report** — FastAPI reads it, frontend displays it! 😄
+
+Ready to download and move to Option B? 🔥
