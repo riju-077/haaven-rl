@@ -1,0 +1,188 @@
+Great questions! Let me go slow. 😄
+
+---
+
+**Reading the reward curve — story style:**
+
+Imagine you're teaching a child to play chess ♟️
+
+- **Week 1** = child plays randomly, sometimes wins by luck (high reward), mostly loses (low reward) — very spiky graph
+- **Week 10** = child starts learning, wins more consistently — graph trends upward
+- **Week 100** = child is good, wins regularly — graph is high and stable
+
+**Our graph shows Week 1 behaviour** — very spiky, no clear upward trend. Agent is still learning randomly.
+
+**Is this wrong?** No! 100 episodes is like week 1 for a chess player. We need more episodes to see proper learning. Not a problem yet. 😄
+
+---
+
+**The `nan` issue:**
+
+Remember our reward formula:
+```
+reward = (portfolio_value - prev_portfolio) / prev_portfolio
+```
+
+This is division. What if `prev_portfolio` somehow becomes 0?
+
+🍕 Dividing 10 pizzas among 0 people = impossible = `nan`
+
+That's exactly what happened at Episode 50. Portfolio hit zero at some point.
+
+---
+
+**How did I spot it?**
+
+Simple — I saw `nan` in the output and immediately thought *"division by zero somewhere"*. The only division in our code is the reward formula. So that's where the fix goes. 😄
+
+---
+
+**Where exactly to add the fix:**
+
+Go to your **TradingEnv cell** (Step 2 cell). Find these two lines:
+
+```python
+# Reward = % change in portfolio value
+reward = (self.portfolio_value - prev_portfolio) / prev_portfolio
+```
+
+Change them to:
+
+```python
+# Reward = % change in portfolio value
+reward = (self.portfolio_value - prev_portfolio) / prev_portfolio
+reward = np.nan_to_num(reward, nan=0.0)
+```
+
+`nan_to_num` simply says — *"if the result is nan, replace it with 0"*. Safe landing! 😄
+
+
+----------------------------------------------------------------------------------------------------------------------------
+
+`nan` is gone! ✅ Training is clean now.
+
+---
+
+**Reading this output like an engineer:**
+
+Good news — no more `nan`. But the reward curve is still spiky with no clear upward trend.
+
+This is happening because **100 episodes is too low** and **epsilon decayed too fast**.
+
+Look at Episode 0 — epsilon is already 0.029! That means by the very first episode the agent had already stopped exploring. It never got enough random exploration to build a good diary.
+
+---
+
+**The fix — two small changes:**
+
+In your **DQNAgent** cell find these lines:
+
+```python
+self.epsilon = 1.0
+self.epsilon_decay = 0.995
+```
+
+Change to:
+
+```python
+self.epsilon = 1.0
+self.epsilon_decay = 0.998
+```
+
+And in your **Training Loop** cell change:
+
+```python
+EPISODES = 100
+```
+
+To:
+
+```python
+EPISODES = 200
+```
+
+**Why?**
+- Slower decay = agent explores properly for longer before switching to exploit
+- 200 episodes = more time to learn
+
+Re-run all cells and show me the new curve! 🔥
+------------------------------------------------------------------------------------------------------------
+
+Great questions! Let me answer one by one 😄
+
+---
+
+**What is 32?**
+32 is the batch size — number of diary entries the agent studies at once. Remember the exam analogy — studying 32 random past papers together instead of one by one.
+
+31 = inputs to neural network
+32 = diary entries studied per learning step
+
+Completely different things! 😄
+
+---
+
+**Epsilon decay — your understanding is almost right!**
+
+But it's not per episode — it's per **step** (per trading day).
+
+So more like:
+- Day 1 → epsilon 1.0 → 100% random
+- Day 2 → epsilon 0.995 → 99.5% random
+- Day 3 → epsilon 0.990 → 99% random
+- ...keeps decaying every single day...
+- Day 748 → epsilon very small → mostly smart decisions
+
+That's why by Episode 0 epsilon was already 0.029 — it had already decayed through 748 days! 😄
+
+---
+
+**Train/test split — YES! 100% correct! ✅**
+
+Right now agent is only seeing `train_norm` — the 748 training days. Test data is completely untouched, sitting separately just like in ML. We only use test data in Step 5 — backtesting.
+
+---
+
+Now go make those two changes and re-run! 🔥
+
+------------------------------------------------------------------------------------------
+
+Yes! 100% possible! 😄
+
+In fact that's already planned — the FastAPI backend will accept inputs from the user.
+
+For example the user could input:
+- Starting portfolio value — ₹50,000 or ₹2,00,000 instead of default ₹1,00,000
+- Date range — maybe they only want to see 2023 performance
+- Risk appetite — conservative or aggressive
+
+Then FastAPI passes those inputs to the agent and returns personalised results!
+
+---
+
+**But for now — scope control! 😄**
+
+Remember our thumb rule from the context file:
+
+*"Keep it clean, don't add extra features mid-build"*
+
+For **Version 1** we keep it simple:
+- Fixed ₹1,00,000 starting balance
+- Fixed 2023-2024 test period
+- User just clicks "Run Backtest" and sees results
+
+**Version 2** — after everything is working — we can add user inputs, custom date ranges, custom portfolio size.
+
+This is actually another great thing to mention to a recruiter:
+
+*"Version 1 has fixed parameters. Version 2 roadmap includes user-defined portfolio size and custom date ranges via the FastAPI endpoint."*
+
+Shows you think about product evolution! 💪
+
+---
+
+Ready for Step 5 now? 🔥
+
+---
+
+Clear? Find that line and add the fix!
