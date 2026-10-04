@@ -1,0 +1,79 @@
+Yes, let's start. First, the plan for V1, then step 1.
+
+V1 plan
+
+┌──────┬───────────────────────────────────────┬──────────────────────────────────────────────────────────────┐
+│ Step │                 What                  │                             Why                              │
+├──────┼───────────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ 1    │ Set up the project structure and      │ Move the code out of the notebook into proper .py files the  │
+│      │ dependencies                          │ backend can reuse                                            │
+├──────┼───────────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ 2    │ data.py: fetch and clean prices       │ Fixes the broken "Ticker" dates                              │
+├──────┼───────────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ 3    │ env.py: the trading environment       │ Fixes the biggest bug: trade on real prices, give the agent  │
+│      │                                       │ normalized ones                                              │
+├──────┼───────────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ 4    │ agent.py: the DQN                     │ Mostly reused; fix how fast exploration shrinks              │
+├──────┼───────────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ 5    │ train.py + backtest.py                │ Correct metrics (real drawdown, real trade count) and a      │
+│      │                                       │ buy-and-hold baseline                                        │
+├──────┼───────────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ 6    │ Train, then regenerate model.pth +    │ Results you can defend in an interview                       │
+│      │ results.json                          │                                                              │
+├──────┼───────────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ 7    │ FastAPI backend                       │ /results endpoint                                            │
+├──────┼───────────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ 8    │ Frontend dashboard                    │ Chart, trade log, metrics                                    │
+└──────┴───────────────────────────────────────┴──────────────────────────────────────────────────────────────┘
+
+The notebook stays in the repo as your record of the exploration you did. The tiny network trains fine on your laptop's CPU, so we don't need Colab.
+
+Step 1: project structure
+
+The target layout:
+
+haven RL/
+├── havenrl/            ← your Python package (the core logic)
+│   ├── __init__.py
+│   ├── data.py
+│   ├── env.py
+│   ├── agent.py
+│   └── metrics.py
+├── scripts/
+│   ├── train.py        ← run this to train
+│   └── backtest.py     ← run this to test + make results.json
+├── api/
+│   └── main.py         ← FastAPI app (step 7)
+├── artifacts/          ← model.pth + results.json will live here
+└── notebooks/
+    └── HavenRL_Training.ipynb
+
+Why split it like this: havenrl/ holds the logic, scripts/ runs it, and api/ serves the results. Training and the API both import the same env.py, so there's one source of truth and nothing gets copy-pasted.
+
+Your tasks
+
+1. Add the dependencies. You're using uv, so:
+uv add torch numpy pandas yfinance gymnasium matplotlib
+We use gymnasium instead of gym: it's the maintained successor, and old gym is deprecated.
+
+2. Create the folders and files:
+mkdir havenrl scripts api artifacts notebooks
+touch havenrl/__init__.py havenrl/data.py havenrl/env.py havenrl/agent.py havenrl/metrics.py
+touch scripts/train.py scripts/backtest.py api/main.py
+In PowerShell, use ni instead of touch, or just create the files in VS Code.
+
+3. Move the existing files into place:
+git mv HavenRL_Training.ipynb notebooks/
+git mv model.pth artifacts/
+git mv results.json artifacts/
+git rm main.py
+git mv moves a file and tells git it was a move, so its history follows it. main.py is the uv hello-world placeholder; api/main.py replaces it.
+
+4. Clean up requirements.txt. uv already tracks dependencies in pyproject.toml, so requirements.txt is a duplicate that will drift out of date. Delete it with git rm requirements.txt. We can generate a fresh one later if deployment needs it.
+
+5. Commit:
+git add -A
+git commit -m "Set up project structure and dependencies"
+git push
+
+When you're done, tell me and I'll check the structure. Then we start step 2: data.py, and why the dates came out as "Ticker".
