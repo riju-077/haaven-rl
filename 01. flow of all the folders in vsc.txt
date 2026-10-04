@@ -1,0 +1,126 @@
+Got it, you know git. Here's the project structure explained properly.
+
+The big idea: one notebook becomes a small system
+
+Your notebook did everything in one place: download data, build the environment, build the agent, train, test, save. That works once in Colab. But V1 also needs a backend that serves results to a dashboard, and a backend can't import code from notebook cells.
+
+So we split the work into three layers:
+
+┌─────────────────────────────────────────────────────────┐
+│  havenrl/   →  the LOGIC (brain + rules of the game)     │
+│               "what things are and how they work"        │
+└───────────────┬─────────────────────────┬───────────────┘
+                │ imported by             │ imported by
+┌───────────────▼──────────┐    ┌─────────▼───────────────┐
+│ scripts/  → the RUNNERS   │    │ api/  → the SERVER       │
+│ "do the work, offline"    │    │ "show the work, online"  │
+└───────────────┬──────────┘    └─────────▲───────────────┘
+                │ writes                  │ reads
+                └──────►  artifacts/  ────┘
+                         (model.pth, results.json)
+
+havenrl/: the logic (your package)
+
+This holds the "what": definitions only, nothing runs on its own.
+
+┌─────────────┬─────────────────────────────────────────────────────────┬─────────────────────────────────────┐
+│    File     │                          Role                           │       Came from notebook cell       │
+├─────────────┼─────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ data.py     │ Download prices from Yahoo, merge the 3 ETFs, split     │ "Fetch and Prepare Data", "Split    │
+│             │ into train/test, normalize                              │ and Normalize"                      │
+├─────────────┼─────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ env.py      │ TradingEnv, the game: state, actions, rewards, the      │ "Build the Custom Gym Environment"  │
+│             │ portfolio's cash and shares                             │                                     │
+├─────────────┼─────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ agent.py    │ DQN network, ReplayBuffer memory, DQNAgent (picks       │ "Build the DQN Agent"               │
+│             │ actions, learns)                                        │                                     │
+├─────────────┼─────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ metrics.py  │ Total return, max drawdown, trade count, buy-and-hold   │ The calculations at the end of the  │
+│             │ baseline                                                │ backtest cell                       │
+├─────────────┼─────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ __init__.py │ Empty. It makes the folder importable: from havenrl.env │ —                                   │
+│             │  import TradingEnv                                      │                                     │
+└─────────────┴─────────────────────────────────────────────────────────┴─────────────────────────────────────┘
+
+Why separate files instead of one big havenrl.py? Each file has one job. If the drawdown number is wrong you open metrics.py and nothing else. In an interview you can say "the environment is decoupled from the agent," which means you could swap DQN for another algorithm without touching env.py.
+
+scripts/: the runners
+
+This holds the "do": you run these from the terminal.
+
+┌─────────────┬───────────────────────────────────────────────────────────────────────┬────────────────────────┐
+│    File     │                             What it does                              │         Output         │
+├─────────────┼───────────────────────────────────────────────────────────────────────┼────────────────────────┤
+│ train.py    │ Gets train data, creates env + agent, runs 200 episodes               │ artifacts/model.pth    │
+├─────────────┼───────────────────────────────────────────────────────────────────────┼────────────────────────┤
+│ backtest.py │ Loads model.pth, runs it on unseen 2023–24 data with no exploration,  │ artifacts/results.json │
+│             │ calculates metrics                                                    │                        │
+└─────────────┴───────────────────────────────────────────────────────────────────────┴────────────────────────┘
+
+Why split train and backtest? Training is slow and done rarely. Backtesting is fast and you'll rerun it often (after fixing a metric, say). You don't want to retrain for 10 minutes just to fix a number. It's also the honest ML workflow: the model is frozen before it ever sees test data.
+
+artifacts/: the outputs
+
+model.pth (trained weights) and results.json (backtest results). They're kept separate because they're produced by code rather than written by hand. Both are currently the old buggy versions and get overwritten in step 6.
+
+api/: the server
+
+api/main.py will be the FastAPI app. It only reads results.json and sends it to the dashboard; it never trains anything. That keeps the server fast and simple: open a file, return JSON.
+
+notebooks/: your lab journal
+
+The original notebook stays as-is, as a record of your exploration (the silver ETF dead end, the switch to Liquid ETF). It isn't used by the system anymore.
+
+The flow from start to finish
+
+python scripts/train.py      →  data.py → env.py + agent.py → model.pth
+python scripts/backtest.py   →  model.pth + env.py + metrics.py → results.json
+fastapi run api/main.py      →  reads results.json → dashboard shows chart
+
+Each step does one thing, the steps are linked by files, and none of them depends on cells being run in the right order.
+
+---
+
+Next, commit this setup (you know how), then we start on data.py. Ready?
+
+✻ Crunched for 23s · done 10:05 PM
+
+❯ im so so sorry but i didnt get a thing im extremely sorry
+
+No need to apologise. I packed too much into that. Let me try again, simply, with one example.
+
+Think of it as a restaurant
+
+Your notebook was like one person doing everything in a tiny kitchen: buying vegetables, cooking, tasting and serving, all at once. It works for one meal, but it gets messy.
+
+So we're splitting the work, like a real restaurant does:
+
+havenrl/ is the recipe book.
+It just describes how things work. It doesn't cook anything by itself.
+- data.py: how to get the ingredients (download the ETF prices)
+- env.py: the rules of the game (if you buy, money goes down and shares go up)
+- agent.py: the brain that decides buy, sell or hold
+- metrics.py: how to score the result (profit %, biggest loss)
+
+scripts/ is the cook.
+The cook opens the recipe book and actually does the work.
+- train.py: teaches the brain (practising on 2020–22)
+- backtest.py: tests the brain on new data (2023–24) and writes down the score
+
+artifacts/ is the fridge.
+Where the finished food is stored:
+- model.pth = the trained brain
+- results.json = the score sheet
+
+api/ is the waiter.
+It takes the score sheet out of the fridge and brings it to the customer (the website). The waiter never cooks.
+
+notebooks/ is your old practice diary. We keep it just to show your journey.
+
+In one line
+
+Recipe book (havenrl) → cook uses it (scripts) → puts food in the fridge (artifacts) → waiter serves it (api).
+
+---
+
+Does this version make sense? Tell me which part, if any, is still confusing and I'll explain just that piece.
